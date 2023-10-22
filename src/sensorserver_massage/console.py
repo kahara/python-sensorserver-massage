@@ -1,44 +1,28 @@
 """CLI entrypoints for sensorserver-massage"""
-from typing import Any
-import asyncio
+# pylint: disable=W1203
+import datetime
 import sys
 import logging
 from pathlib import Path
 
 import click
+from dateutil.parser import isoparse
 
 from datastreamcorelib.logging import init_logging
-from sensorserver_massage.defaultconfig import DEFAULT_CONFIG_STR
 from sensorserver_massage import __version__
-from sensorserver_massage.service import Sensorserver_massageService
+from sensorserver_massage.massager import Massager
 
 
 LOGGER = logging.getLogger(__name__)
-
-
-def dump_default_config(ctx: Any, param: Any, value: bool) -> None:  # pylint: disable=W0613
-    """Print the default config and exit"""
-    if not value:
-        return
-    click.echo(DEFAULT_CONFIG_STR)
-    if ctx:
-        ctx.exit()
 
 
 @click.command()
 @click.version_option(version=__version__)
 @click.option("-l", "--loglevel", help="Python log level, 10=DEBUG, 20=INFO, 30=WARNING, 40=CRITICAL", default=30)
 @click.option("-v", "--verbose", count=True, help="Shorthand for info/debug loglevel (-v/-vv)")
-@click.option(
-    "--defaultconfig",
-    is_flag=True,
-    callback=dump_default_config,
-    expose_value=False,
-    is_eager=True,
-    help="Show default config",
-)
-@click.argument("configfile", type=click.Path(exists=True))
-def sensorserver_massage_cli(configfile: Path, loglevel: int, verbose: int) -> None:
+@click.option("-s", "--source", help="Source JSONlines file")
+@click.option("-d", "--destination", help="Destination CSV file")
+def sensorserver_massage_cli(loglevel: int, verbose: int, source: Path, destination: Path) -> None:
     """Foo!"""
     if verbose == 1:
         loglevel = 20
@@ -47,7 +31,13 @@ def sensorserver_massage_cli(configfile: Path, loglevel: int, verbose: int) -> N
     init_logging(loglevel)
     LOGGER.setLevel(loglevel)
 
-    service_instance = Sensorserver_massageService(Path(configfile))
+    massager = Massager(source, destination, starttime_from_sourcefilename(Path(source)))
 
-    exitcode = asyncio.get_event_loop().run_until_complete(service_instance.run())
-    sys.exit(exitcode)
+    sys.exit(massager.run())
+
+
+def starttime_from_sourcefilename(source: Path) -> datetime.datetime:
+    """Extract starting timestamp from source file name"""
+    starttime = isoparse(source.name.replace(".jsonl", ""))
+    LOGGER.info(f"Start time is {starttime}")
+    return starttime

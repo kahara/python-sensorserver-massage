@@ -3,19 +3,18 @@ name = "sensorserver_massage"
 version = "0.1.0"
 description = "Foo!"
 authors = ["Joni Kähärä <joni.kahara@async.fi>"]
-# FIXME: Doublecheck these values
-#homepage = "https://gitlab.com/advian-oss/python-sensorserver-massage/"
-#repository = "https://gitlab.com/advian-oss/python-sensorserver-massage/"
-#license = "FIXME"
-readme = "README.rst"
+homepage = "https://github.com/kahara/python-sensorserver-massage/"
+repository = "https://github.com/kahara/python-sensorserver-massage/"
+license = "MIT"
+readme = "README.md"
 
 [tool.poetry.scripts]
-sensorserver_massage = "sensorserver_massage.console:sensorserver_massage_cli"
+massage = "sensorserver_massage.console:sensorserver_massage_cli"
 
 
 [tool.black]
 line-length = 120
-target-version = ['py37']
+target-version = ['py310']
 exclude = '''
 (
   /(
@@ -46,7 +45,7 @@ max-line-length = 120
 max-parents = 10
 
 [tool.pylint.messages_control]
-disable=["fixme", "W1202", "C0330", "C0209"]
+disable=["fixme", "W1202", "C0209"]
 
 [tool.pylint.similarities]
 min-similarity-lines = 8
@@ -57,9 +56,15 @@ omit = ["tests/*"]
 branch = true
 
 [tool.poetry.dependencies]
-python = "^3.8"
-datastreamservicelib = "^1.12"
+python = "^3.10"
+datastreamcorelib = "^1.6.0"
 click = "^8.0"
+python-dateutil = "^2.8.2"
+types-python-dateutil = "^2.8.19.14"
+polars = {version = "^0.19.7"}
+scipy = {version = "^1.11.2", python="^3.10,<3.13"}
+pooch = {version = "^1.7.0", extras = ["xxhash"]}
+matplotlib = "^3.8.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.1"
@@ -68,7 +73,7 @@ pytest-cov = "^3.0"
 pylint = "^2.13"
 black = "^22.3"
 bandit = "^1.7"
-mypy = "^0.942"
+mypy = "^1.5.1"
 pre-commit = "^2.17"
 pytest-asyncio = "^0.18"
 bump2version = "^1.0"
