@@ -1,4 +1,5 @@
 """See https://github.com/MrCredulous/1D-MCTV-Denoising"""
+# pylint: disable=R0205,C0103,C0116,R0903,R0912,R0915
 import numpy as np
 
 # FIXME clean this up further

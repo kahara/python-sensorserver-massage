@@ -6,12 +6,13 @@ import logging
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, List
+from typing import Any
 
 import numpy
 import polars as pl
 from polars import Series
-from scipy.signal import periodogram  # type: ignore
+
+# from scipy.signal import periodogram  # type: ignore
 
 from .denoise import denoise_1d_mctv, Parameter  # type: ignore
 
@@ -69,27 +70,31 @@ class Massager:
             .group_by_dynamic(index_column="utc", every="5m", period="10m", offset="0s")
             .agg(
                 [
-                    (pl.col("values")
-                    .list.take(0)
-                    .explode()
-                    .sub(pl.col("values").list.take(0).explode().median())
-                    .map_elements(denoise)
-                     .pow(2)
-                    .alias("x")
-                    + pl.col("values")
-                    .list.take(1)
-                    .explode()
-                    .sub(pl.col("values").list.take(1).explode().median())
-                    .map_elements(denoise)
-                    .pow(2)
-                    .alias("y")
-                    + pl.col("values")
-                    .list.take(2)
-                    .explode()
-                    .sub(pl.col("values").list.take(2).explode().median())
-                    .map_elements(denoise)
-                    .pow(2)
-                    .alias("z")).sqrt().alias("amplitudes"),
+                    (
+                        pl.col("values")
+                        .list.take(0)
+                        .explode()
+                        .sub(pl.col("values").list.take(0).explode().median())
+                        .map_elements(denoise)
+                        .pow(2)
+                        .alias("x")
+                        + pl.col("values")
+                        .list.take(1)
+                        .explode()
+                        .sub(pl.col("values").list.take(1).explode().median())
+                        .map_elements(denoise)
+                        .pow(2)
+                        .alias("y")
+                        + pl.col("values")
+                        .list.take(2)
+                        .explode()
+                        .sub(pl.col("values").list.take(2).explode().median())
+                        .map_elements(denoise)
+                        .pow(2)
+                        .alias("z")
+                    )
+                    .sqrt()
+                    .alias("amplitudes"),
                 ]
             )
         )
@@ -101,14 +106,7 @@ class Massager:
         """Compute"""
 
         self.processed = self.preprocessed.select(
-            pl.col("utc"),
-            pl.col("amplitudes").list.eval(
-                pl.element().pow(2)
-            )
-            .list
-            .mean()
-            .sqrt()
-            .alias("rms")
+            pl.col("utc"), pl.col("amplitudes").list.eval(pl.element().pow(2)).list.mean().sqrt().alias("rms")
         )
 
         LOGGER.debug(f"Processed query looks like {self.processed.explain(optimized=True)}")
